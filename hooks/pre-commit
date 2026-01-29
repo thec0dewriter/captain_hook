@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# Pre-commit hook for captain-hook
+# Captain Hook - Pre-commit hook with personality! 🎣
 # Runs QA checks and attempts auto-fixes on failure
+# "Because every repository needs a captain!" ⚓
 #
 
 set -e
@@ -11,12 +12,18 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # Ensure UV is in PATH
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
-echo -e "${BLUE}🔍 Running pre-commit QA checks...${NC}\n"
+echo -e "${CYAN}${BOLD}"
+echo "⚓━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⚓"
+echo "  🎣 CAPTAIN HOOK - Pre-Commit Quality Inspection 🎣"
+echo "⚓━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⚓"
+echo -e "${NC}\n"
 
 # Track if any check failed
 FAILED=0
@@ -27,7 +34,8 @@ attempt_fix_with_copilot() {
     local check_type=$1
     local error_output=$2
     
-    echo -e "\n${YELLOW}⚠️  $check_type failed. Attempting auto-fix with GitHub Copilot CLI...${NC}\n"
+    echo -e "\n${YELLOW}⚓ ${BOLD}\"Blimey! $check_type be beyond me fixing powers!\"${NC}"
+    echo -e "${CYAN}⚓ \"Calling in the ADMIRAL for strategic advice!\"${NC}\n"
     
     # Save error output to temp file
     local error_file=$(mktemp)
@@ -38,14 +46,16 @@ attempt_fix_with_copilot() {
     fix_prompt+="Error output:\n$(cat $error_file)\n\n"
     fix_prompt+="Please fix these issues while maintaining code functionality."
     
-    echo -e "${BLUE}Calling GitHub Copilot CLI...${NC}"
+    echo -e "${BLUE}🎺 Calling Admiral GitHub Copilot CLI for backup...${NC}"
     
     # Try to use gh copilot if available
     if command -v gh &> /dev/null && gh copilot --version &> /dev/null 2>&1; then
         echo "$fix_prompt" | gh copilot suggest -t shell
         FIX_ATTEMPTED=1
+        echo -e "\n${CYAN}⚓ \"There ye have it! Follow the Admiral's orders, sailor!\"${NC}"
     else
-        echo -e "${RED}GitHub Copilot CLI not found. Please install with: gh extension install github/gh-copilot${NC}"
+        echo -e "${RED}⚠️  Admiral Copilot CLI not found!${NC}"
+        echo -e "${YELLOW}Install with: ${BOLD}gh extension install github/gh-copilot${NC}"
         echo -e "\n${YELLOW}Error details:${NC}"
         cat "$error_file"
     fi
@@ -56,15 +66,17 @@ attempt_fix_with_copilot() {
 # 1. LINTING CHECK
 echo -e "${BLUE}📋 Step 1/4: Linting (ruff check)${NC}"
 if ! LINT_OUTPUT=$(uv run ruff check . 2>&1); then
-    echo -e "${RED}✗ Linting failed${NC}\n"
+    echo -e "${RED}✗ Linting failed${NC}"
+    echo -e "${YELLOW}⚓ \"AVAST! Ye code be full of scurvy issues!\"${NC}\n"
     echo "$LINT_OUTPUT"
     
-    echo -e "\n${YELLOW}Attempting auto-fix with ruff...${NC}"
+    echo -e "\n${CYAN}⚓ \"Let me fix what I can, matey...\"${NC}"
     if uv run ruff check . --fix; then
         echo -e "${GREEN}✓ Auto-fixed linting issues${NC}"
+        echo -e "${CYAN}⚓ \"Unused imports walked the plank!\"${NC}"
         
         # Stage the fixed files
-        echo -e "${BLUE}Staging auto-fixed files...${NC}"
+        echo -e "${BLUE}⚓ Staging the cleaned-up code...${NC}"
         git diff --name-only | xargs -r git add
     else
         echo -e "${RED}✗ Could not auto-fix all issues${NC}"
@@ -73,20 +85,23 @@ if ! LINT_OUTPUT=$(uv run ruff check . 2>&1); then
     fi
 else
     echo -e "${GREEN}✓ Linting passed${NC}"
+    echo -e "${CYAN}⚓ \"Clean code, sailor! Well done!\"${NC}"
 fi
 
 # 2. FORMATTING CHECK
 echo -e "\n${BLUE}🎨 Step 2/4: Format checking (ruff format)${NC}"
 if ! FORMAT_OUTPUT=$(uv run ruff format --check . 2>&1); then
-    echo -e "${RED}✗ Format check failed${NC}\n"
+    echo -e "${RED}✗ Format check failed${NC}"
+    echo -e "${YELLOW}⚓ \"Yer code be messier than a pirate's beard!\"${NC}\n"
     echo "$FORMAT_OUTPUT"
     
-    echo -e "\n${YELLOW}Auto-formatting files...${NC}"
+    echo -e "\n${CYAN}⚓ \"Time to swab the deck and clean this up!\"${NC}"
     if uv run ruff format .; then
         echo -e "${GREEN}✓ Files formatted${NC}"
+        echo -e "${CYAN}⚓ \"Shipshape and Bristol fashion!\"${NC}"
         
         # Stage the formatted files
-        echo -e "${BLUE}Staging formatted files...${NC}"
+        echo -e "${BLUE}⚓ Staging the tidied-up code...${NC}"
         git diff --name-only | xargs -r git add
     else
         echo -e "${RED}✗ Formatting failed${NC}"
@@ -95,50 +110,59 @@ if ! FORMAT_OUTPUT=$(uv run ruff format --check . 2>&1); then
     fi
 else
     echo -e "${GREEN}✓ Format check passed${NC}"
+    echo -e "${CYAN}⚓ \"Code looks sharp as a cutlass!\"${NC}"
 fi
 
 # 3. TYPE CHECKING
 echo -e "\n${BLUE}🔎 Step 3/4: Type checking (mypy)${NC}"
 if ! MYPY_OUTPUT=$(uv run mypy src 2>&1); then
-    echo -e "${RED}✗ Type checking failed${NC}\n"
+    echo -e "${RED}✗ Type checking failed${NC}"
+    echo -e "${YELLOW}⚓ \"Where be yer type hints, sailor?\"${NC}\n"
     echo "$MYPY_OUTPUT"
     attempt_fix_with_copilot "type checking" "$MYPY_OUTPUT"
     FAILED=1
 else
     echo -e "${GREEN}✓ Type checking passed${NC}"
+    echo -e "${CYAN}⚓ \"Good! Proper type hints, as any respectable sailor knows!\"${NC}"
 fi
 
 # 4. TESTS
 echo -e "\n${BLUE}🧪 Step 4/4: Running tests (pytest)${NC}"
 if ! TEST_OUTPUT=$(uv run pytest 2>&1); then
-    echo -e "${RED}✗ Tests failed${NC}\n"
+    echo -e "${RED}✗ Tests failed${NC}"
+    echo -e "${YELLOW}⚓ \"Yer code be sinkin'! Fix those tests!\"${NC}\n"
     echo "$TEST_OUTPUT"
     attempt_fix_with_copilot "tests" "$TEST_OUTPUT"
     FAILED=1
 else
     echo -e "${GREEN}✓ Tests passed${NC}"
+    echo -e "${CYAN}⚓ \"All hands passed inspection! Well done, crew!\"${NC}"
 fi
 
 # Final result
-echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "\n${CYAN}${BOLD}⚓━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⚓${NC}"
 if [ $FAILED -eq 1 ]; then
-    echo -e "${RED}❌ Pre-commit checks FAILED${NC}"
+    echo -e "${RED}${BOLD}❌ PRE-COMMIT CHECKS FAILED${NC}"
+    echo -e "${YELLOW}⚓ \"Not so fast, sailor! Ye can't set sail with broken code!\"${NC}"
     
     if [ $FIX_ATTEMPTED -eq 1 ]; then
-        echo -e "${YELLOW}Auto-fix was attempted. Please review the suggestions and try committing again.${NC}"
+        echo -e "\n${CYAN}The Admiral provided some wisdom above.${NC}"
+        echo -e "${YELLOW}Review the suggestions and try committing again.${NC}"
     else
-        echo -e "${YELLOW}Please fix the issues above and try committing again.${NC}"
+        echo -e "\n${YELLOW}Fix the issues above and try committing again.${NC}"
     fi
     
-    echo -e "\n${BLUE}Tips:${NC}"
+    echo -e "\n${BLUE}⚓ Captain's Tips:${NC}"
     echo -e "  - Run ${YELLOW}'make check'${NC} to see all errors"
     echo -e "  - Run ${YELLOW}'make format'${NC} to auto-format code"
     echo -e "  - Run ${YELLOW}'uv run ruff check . --fix'${NC} to auto-fix linting"
     echo -e "  - Use ${YELLOW}'git commit --no-verify'${NC} to bypass this hook (not recommended)"
+    echo -e "\n${CYAN}⚓ \"Get yer code shipshape and try again, matey!\" ⚓${NC}"
     
     exit 1
 else
-    echo -e "${GREEN}✅ All pre-commit checks PASSED${NC}"
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+    echo -e "${GREEN}${BOLD}✅ ALL PRE-COMMIT CHECKS PASSED${NC}"
+    echo -e "${CYAN}⚓ \"PERMISSION GRANTED! Your code may set sail!\" ⚓${NC}"
+    echo -e "${CYAN}${BOLD}⚓━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⚓${NC}\n"
     exit 0
 fi
