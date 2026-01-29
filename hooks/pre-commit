@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook for captain-hook
+# Runs QA checks and attempts auto-fixes on failure
+#
+
+set -e
+
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Ensure UV is in PATH
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+echo -e "${BLUE}🔍 Running pre-commit QA checks...${NC}\n"
+
+# Track if any check failed
+FAILED=0
+FIX_ATTEMPTED=0
+
+# Function to run GitHub Copilot CLI to fix issues
+attempt_fix_with_copilot() {
+    local check_type=$1
+    local error_output=$2
+    
+    echo -e "\n${YELLOW}⚠️  $check_type failed. Attempting auto-fix with GitHub Copilot CLI...${NC}\n"
+    
+    # Save error output to temp file
+    local error_file=$(mktemp)
+    echo "$error_output" > "$error_file"
+    
+    # Prepare fix prompt
+    local fix_prompt="Fix the following $check_type errors in the codebase:\n\n"
+    fix_prompt+="Error output:\n$(cat $error_file)\n\n"
+    fix_prompt+="Please fix these issues while maintaining code functionality."
+    
+    echo -e "${BLUE}Calling GitHub Copilot CLI...${NC}"
+    
+    # Try to use gh copilot if available
+    if command -v gh &> /dev/null && gh copilot --version &> /dev/null 2>&1; then
+        echo "$fix_prompt" | gh copilot suggest -t shell
+        FIX_ATTEMPTED=1
+    else
+        echo -e "${RED}GitHub Copilot CLI not found. Please install with: gh extension install github/gh-copilot${NC}"
+        echo -e "\n${YELLOW}Error details:${NC}"
+        cat "$error_file"
+    fi
+    
+    rm -f "$error_file"
+}
+
+# 1. LINTING CHECK
+echo -e "${BLUE}📋 Step 1/4: Linting (ruff check)${NC}"
+if ! LINT_OUTPUT=$(uv run ruff check . 2>&1); then
+    echo -e "${RED}✗ Linting failed${NC}\n"
+    echo "$LINT_OUTPUT"
+    
+    echo -e "\n${YELLOW}Attempting auto-fix with ruff...${NC}"
+    if uv run ruff check . --fix; then
+        echo -e "${GREEN}✓ Auto-fixed linting issues${NC}"
+        
+        # Stage the fixed files
+        echo -e "${BLUE}Staging auto-fixed files...${NC}"
+        git diff --name-only | xargs -r git add
+    else
+        echo -e "${RED}✗ Could not auto-fix all issues${NC}"
+        attempt_fix_with_copilot "linting" "$LINT_OUTPUT"
+        FAILED=1
+    fi
+else
+    echo -e "${GREEN}✓ Linting passed${NC}"
+fi
+
+# 2. FORMATTING CHECK
+echo -e "\n${BLUE}🎨 Step 2/4: Format checking (ruff format)${NC}"
+if ! FORMAT_OUTPUT=$(uv run ruff format --check . 2>&1); then
+    echo -e "${RED}✗ Format check failed${NC}\n"
+    echo "$FORMAT_OUTPUT"
+    
+    echo -e "\n${YELLOW}Auto-formatting files...${NC}"
+    if uv run ruff format .; then
+        echo -e "${GREEN}✓ Files formatted${NC}"
+        
+        # Stage the formatted files
+        echo -e "${BLUE}Staging formatted files...${NC}"
+        git diff --name-only | xargs -r git add
+    else
+        echo -e "${RED}✗ Formatting failed${NC}"
+        attempt_fix_with_copilot "formatting" "$FORMAT_OUTPUT"
+        FAILED=1
+    fi
+else
+    echo -e "${GREEN}✓ Format check passed${NC}"
+fi
+
+# 3. TYPE CHECKING
+echo -e "\n${BLUE}🔎 Step 3/4: Type checking (mypy)${NC}"
+if ! MYPY_OUTPUT=$(uv run mypy src 2>&1); then
+    echo -e "${RED}✗ Type checking failed${NC}\n"
+    echo "$MYPY_OUTPUT"
+    attempt_fix_with_copilot "type checking" "$MYPY_OUTPUT"
+    FAILED=1
+else
+    echo -e "${GREEN}✓ Type checking passed${NC}"
+fi
+
+# 4. TESTS
+echo -e "\n${BLUE}🧪 Step 4/4: Running tests (pytest)${NC}"
+if ! TEST_OUTPUT=$(uv run pytest 2>&1); then
+    echo -e "${RED}✗ Tests failed${NC}\n"
+    echo "$TEST_OUTPUT"
+    attempt_fix_with_copilot "tests" "$TEST_OUTPUT"
+    FAILED=1
+else
+    echo -e "${GREEN}✓ Tests passed${NC}"
+fi
+
+# Final result
+echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+if [ $FAILED -eq 1 ]; then
+    echo -e "${RED}❌ Pre-commit checks FAILED${NC}"
+    
+    if [ $FIX_ATTEMPTED -eq 1 ]; then
+        echo -e "${YELLOW}Auto-fix was attempted. Please review the suggestions and try committing again.${NC}"
+    else
+        echo -e "${YELLOW}Please fix the issues above and try committing again.${NC}"
+    fi
+    
+    echo -e "\n${BLUE}Tips:${NC}"
+    echo -e "  - Run ${YELLOW}'make check'${NC} to see all errors"
+    echo -e "  - Run ${YELLOW}'make format'${NC} to auto-format code"
+    echo -e "  - Run ${YELLOW}'uv run ruff check . --fix'${NC} to auto-fix linting"
+    echo -e "  - Use ${YELLOW}'git commit --no-verify'${NC} to bypass this hook (not recommended)"
+    
+    exit 1
+else
+    echo -e "${GREEN}✅ All pre-commit checks PASSED${NC}"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+    exit 0
+fi
