@@ -1,10 +1,30 @@
 [project]
 name = "captain-hook"
 version = "0.1.0"
-description = "A sample Python library with QA tooling"
+description = "Intelligent git pre-commit hook with GitHub Copilot CLI integration - A demonstrator for the GitHub Copilot CLI Challenge"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = []
+authors = [
+    {name = "thec0dewriter", email = "kutikmatyas@gmail.com"}
+]
+keywords = ["git-hooks", "pre-commit", "qa-tools", "github-copilot", "ai-assisted-development"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Version Control :: Git",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/thec0dewriter/captain-hook"
+Repository = "https://github.com/thec0dewriter/captain-hook"
+"Challenge Submission" = "https://dev.to/challenges/github-2026-01-21"
 
 [build-system]
 requires = ["uv_build>=0.9.28,<0.10.0"]

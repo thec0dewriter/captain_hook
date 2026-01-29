@@ -1,10 +1,15 @@
 # Git Hooks
 
+> **🏆 Part of the GitHub Copilot CLI Challenge**  
+> Demonstrating AI-assisted development workflows with intelligent git hooks
+
 This directory contains git hooks for the captain-hook project.
 
 ## Available Hooks
 
 ### pre-commit
+
+**⭐ The star of the GitHub Copilot CLI Challenge submission!**
 
 The pre-commit hook runs comprehensive QA checks before allowing a commit:
 

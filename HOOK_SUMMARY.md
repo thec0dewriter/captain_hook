@@ -1,5 +1,8 @@
 # Git Pre-Commit Hook - Summary
 
+> **🏆 GitHub Copilot CLI Challenge Demonstrator**  
+> This hook showcases intelligent AI-assisted development workflows by integrating GitHub Copilot CLI into automated quality checks.
+
 ## ✅ Successfully Created
 
 A comprehensive pre-commit git hook has been installed that performs the following checks before every commit:

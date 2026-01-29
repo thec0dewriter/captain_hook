@@ -1,17 +1,21 @@
 # Quick Reference Guide
 
+> **Captain Hook** - GitHub Copilot CLI Challenge Demonstrator  
+> Intelligent git hooks with AI-assisted error resolution
+
 ## Available Make Commands
 
 ```bash
-make help         # Show all available commands
-make install      # Install dependencies (uv sync)
-make test         # Run tests with coverage
-make lint         # Run linting checks (ruff check)
-make format       # Format code (ruff format)
-make format-check # Check formatting without changes
-make typecheck    # Run type checking (mypy)
-make check        # Run ALL checks (lint + format-check + typecheck + test)
-make clean        # Remove generated files and caches
+make help          # Show all available commands
+make install       # Install dependencies (uv sync)
+make install-hooks # Install git pre-commit hook ⭐
+make test          # Run tests with coverage
+make lint          # Run linting checks (ruff check)
+make format        # Format code (ruff format)
+make format-check  # Check formatting without changes
+make typecheck     # Run type checking (mypy)
+make check         # Run ALL checks (lint + format-check + typecheck + test)
+make clean         # Remove generated files and caches
 ```
 
 ## Direct UV Commands
