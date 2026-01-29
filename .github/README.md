@@ -29,9 +29,9 @@ git commit -m "test"
 
 ## 📖 Learn More
 
-- **[Full Submission](submission.md)** - Complete challenge submission
-- **[Hook Documentation](hooks/README.md)** - Technical details
-- **[Quick Reference](QUICKREF.md)** - Command cheat sheet
+- **[Full Submission](../submission.md)** - Complete challenge submission
+- **[Hook Documentation](../hooks/README.md)** - Technical details
+- **[Quick Reference](../QUICKREF.md)** - Command cheat sheet
 
 ## 🤖 What Makes This Special?
 
